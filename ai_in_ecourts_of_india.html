@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI in eCourts of India - Intelligent Penal Code Analysis System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151f32',
+                            900: '#0b1120',
+                        },
+                        brand: {
+                            blue: '#3b82f6',
+                            indigo: '#4f46e5',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1120;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Utility animations */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Print Media Styles for Legal Brief */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-container, #print-container * {
+                visibility: visible;
+            }
+            #print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background-color: white !important;
+                color: black !important;
+            }
+            .print-badge {
+                border: 1px solid #000;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.8em;
+            }
+            .print-section {
+                border-bottom: 2px solid #ccc;
+                padding-bottom: 15px;
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans antialiased overflow-x-hidden min-h-screen flex flex-col">
+
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Branding & Emblem -->
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0 text-amber-500">
+                        <!-- Abstract Ashoka/Justice Emblem SVG -->
+                        <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+                        </svg>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-lg font-bold text-white tracking-wide">AI in eCourts of India</span>
+                        <span class="text-xs text-slate-400 font-medium tracking-wider uppercase">Intelligent Penal Code Analysis System</span>
+                    </div>
+                </div>
+                
+                <!-- Status & Controls -->
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-600">
+                        <div class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse-slow shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                        <span class="text-xs font-semibold text-brand-emerald">Engine Active / Offline Mode</span>
+                    </div>
+                    <div class="text-sm font-mono text-slate-400" id="clock-display">
+                        00:00:00 IST
+                    </div>
+                    <button onclick="toggleDrawer()" class="relative flex items-center justify-center p-2 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/40 hover:text-white transition-colors border border-indigo-500/30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                        <span id="pin-badge" class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        
+        <!-- Hero Search Console -->
+        <section class="glass-panel rounded-2xl p-6 mb-8 shadow-2xl shadow-indigo-900/10">
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="flex-grow w-full relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-brand-blue group-focus-within:text-indigo-400 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" id="search-input" 
+                        class="block w-full pl-12 pr-4 py-4 bg-slate-800/80 border border-slate-600 rounded-xl leading-5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue sm:text-lg transition-all shadow-inner" 
+                        placeholder="Describe the situation naturally, enter keywords, or type a section number (e.g., 'acid thrown', '302', 'fake signature')...">
+                </div>
+            </div>
+
+            <!-- Scenarios & Filters -->
+            <div class="mt-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Try Scenarios:</span>
+                    <button onclick="setScenario('Bank teller siphons funds')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 hover:bg-brand-indigo/30 hover:text-white border border-slate-700 transition-colors text-slate-300">Bank teller siphons funds</button>
+                    <button onclick="setScenario('Road accident due to rash speeding')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 hover:bg-brand-indigo/30 hover:text-white border border-slate-700 transition-colors text-slate-300">Road accident (rash speeding)</button>
+                    <button onclick="setScenario('Attempted extortion using forged documents')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 hover:bg-brand-indigo/30 hover:text-white border border-slate-700 transition-colors text-slate-300">Extortion via forged doc</button>
+                    <button onclick="setScenario('Acid thrown with intent to disfigure')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 hover:bg-brand-indigo/30 hover:text-white border border-slate-700 transition-colors text-slate-300">Acid thrown</button>
+                </div>
+            </div>
+
+            <!-- Category Filters -->
+            <div class="mt-5 pt-5 border-t border-slate-700/50 flex flex-wrap gap-2" id="category-filters">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2 mt-2">Filter by Category:</span>
+                <button class="filter-btn active px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-brand-blue text-white shadow-lg shadow-blue-500/30" data-category="All">All Entities</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors" data-category="Life & Body">Life & Body</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors" data-category="Property">Property</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors" data-category="State & Public Justice">State & Public Justice</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors" data-category="Documents & Forgery">Documents / Forgery</button>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-l-4 border-l-brand-blue">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Total Sections Indexed</p>
+                    <p class="text-2xl font-bold text-white mt-1">29</p>
+                </div>
+                <div class="p-2 bg-slate-800 rounded-lg text-brand-blue"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-l-4 border-l-brand-amber">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Landmark Rulings</p>
+                    <p class="text-2xl font-bold text-white mt-1">29</p>
+                </div>
+                <div class="p-2 bg-slate-800 rounded-lg text-brand-amber"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg></div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-l-4 border-l-brand-emerald">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Search Match Confidence</p>
+                    <p class="text-2xl font-bold text-white mt-1" id="confidence-metric">N/A</p>
+                </div>
+                <div class="p-2 bg-slate-800 rounded-lg text-brand-emerald"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-l-4 border-l-brand-rose">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Query Latency</p>
+                    <p class="text-2xl font-bold text-white mt-1" id="latency-metric">&lt; 1ms</p>
+                </div>
+                <div class="p-2 bg-slate-800 rounded-lg text-brand-rose"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-28rem)] min-h-[500px]">
+            
+            <!-- Left Column: Search Results -->
+            <div class="lg:col-span-4 flex flex-col glass-panel rounded-2xl overflow-hidden shadow-xl border border-slate-700/60">
+                <div class="p-4 bg-slate-800/80 border-b border-slate-700/50 flex justify-between items-center z-10 shadow-sm">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                        Ranked Results
+                    </h2>
+                    <span id="result-count" class="text-xs font-mono bg-slate-700 px-2 py-1 rounded text-slate-300">29 Found</span>
+                </div>
+                <div class="flex-grow overflow-y-auto p-3 space-y-3 relative" id="results-container">
+                    <!-- Dynamic Results Rendered Here -->
+                </div>
+            </div>
+
+            <!-- Right Column: Section Detail View -->
+            <div class="lg:col-span-8 glass-panel rounded-2xl overflow-hidden shadow-xl border border-slate-700/60 flex flex-col relative bg-gradient-to-br from-slate-900 to-slate-850">
+                
+                <!-- Initial Empty State -->
+                <div id="detail-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-20 bg-slate-900/90 backdrop-blur-sm">
+                    <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-lg font-medium">Select a provision to view detailed analysis</p>
+                    <p class="text-sm mt-2 max-w-md text-center opacity-70">The Intelligent Engine analyzes penal provisions, breaking them down into essential legal elements (Actus Reus/Mens Rea) and procedural guidelines.</p>
+                </div>
+
+                <!-- Active Detail State -->
+                <div id="detail-content" class="flex-grow overflow-y-auto hidden">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-slate-700/50 bg-slate-800/40 relative">
+                        <button onclick="pinCurrentSection()" class="absolute top-6 right-6 p-2 bg-slate-700 hover:bg-indigo-600 rounded-lg text-white transition-colors group shadow-lg" title="Pin to Legal Brief">
+                            <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                            </svg>
+                        </button>
+                        
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-brand-indigo/20 text-brand-indigo border border-brand-indigo/30" id="detail-act">IPC 1860</span>
+                            <span class="text-slate-400 text-sm" id="detail-chapter">Chapter XVI</span>
+                        </div>
+                        <h1 class="text-3xl font-bold text-white mb-3" id="detail-title">Section 302: Punishment for murder</h1>
+                        
+                        <div class="flex flex-wrap gap-3 mt-4" id="detail-tags">
+                            <!-- Tags injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Body Grid -->
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Panel inside details -->
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    Statutory Text
+                                </h3>
+                                <div class="p-4 bg-slate-800/60 rounded-xl border border-slate-700/50 text-slate-300 text-sm leading-relaxed italic" id="detail-fulltext">
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-indigo-900/20 to-slate-800/40 p-4 rounded-xl border border-indigo-500/20 shadow-inner">
+                                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3">Penal Consequences</h3>
+                                <p class="text-white font-medium flex items-start">
+                                    <svg class="w-5 h-5 mr-2 mt-0.5 text-rose-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span id="detail-punishment"></span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel inside details -->
+                        <div class="space-y-6">
+                            <!-- Legal Elements -->
+                            <div class="glass-panel p-4 rounded-xl border border-slate-600/50">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700/50 pb-2">Deconstruction of Elements</h3>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-semibold text-brand-emerald mb-1">Actus Reus (The Act)</h4>
+                                    <p class="text-sm text-slate-300" id="detail-actus"></p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-sm font-semibold text-brand-amber mb-1">Mens Rea (The Intent)</h4>
+                                    <p class="text-sm text-slate-300" id="detail-mens"></p>
+                                </div>
+                            </div>
+
+                            <!-- Context / Precedents -->
+                            <div>
+                                <div class="mb-4">
+                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">General Exceptions / Notes</h3>
+                                    <p class="text-sm text-slate-400 border-l-2 border-slate-600 pl-3" id="detail-exceptions"></p>
+                                </div>
+                                
+                                <div class="bg-slate-800/80 p-4 rounded-xl border border-brand-amber/20 shadow-lg">
+                                    <h3 class="text-xs font-bold text-brand-amber uppercase tracking-wider mb-2 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                        Landmark Precedent
+                                    </h3>
+                                    <p class="text-sm text-white font-medium" id="detail-landmark"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="drawer-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleDrawer()"></div>
+    <div id="brief-drawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-slate-900 border-l border-slate-700 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800">
+            <h2 class="text-lg font-bold text-white flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Legal Brief Session
+            </h2>
+            <button onclick="toggleDrawer()" class="text-slate-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <div class="flex-grow overflow-y-auto p-4 space-y-4" id="drawer-content">
+            <!-- Pinned items go here -->
+            <div class="text-center text-slate-500 mt-10">
+                <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                <p>No provisions pinned yet.</p>
+                <p class="text-xs mt-1">Pin sections to build your exportable brief.</p>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-slate-700 bg-slate-800">
+            <button onclick="generatePrintBrief()" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" id="btn-export-brief" disabled>
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Generate Legal Brief
+            </button>
+        </div>
+    </div>
+
+    <div id="print-container" class="hidden">
+        <!-- Filled dynamically via JS -->
+    </div>
+
+    <script>
+        /**
+         * PART 1: CONSTANTS & EMBEDDED CORPUS DATA
+         * Meticulously compiled list of 29 distinct Indian Penal Code sections.
+         */
+        const LEGAL_DATABASE = [
+            // Offences Affecting Life & Body
+            {
+                section: "299", act: "Indian Penal Code, 1860", title: "Culpable Homicide", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment up to 10 years, or fine, or both (Sec 304)",
+                elements: { actusReus: "Doing an act with the intention of causing death, or causing such bodily injury as is likely to cause death.", mensRea: "Intention or knowledge that the act is likely to cause death." },
+                summary: "Causing death by doing an act with the intention or knowledge of likely causing death.",
+                fullText: "Whoever causes death by doing an act with the intention of causing death, or with the intention of causing such bodily injury as is likely to cause death, or with the knowledge that he is likely by such act to cause death, commits the offence of culpable homicide.",
+                exceptions: "Does not apply if death is caused without intention or knowledge (e.g., pure accident).",
+                landmarkCase: "Palani Goundan v. Emperor - Distinction between intention to cause injury and knowledge that it may cause death.",
+                keywords: ["kill", "death", "murder", "homicide", "culpable", "strike", "injury", "manslaughter"]
+            },
+            {
+                section: "302", act: "Indian Penal Code, 1860", title: "Murder (R/w Sec 300)", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Death or imprisonment for life, and fine",
+                elements: { actusReus: "Causing death of a human being.", mensRea: "Premeditated intention to cause death or bodily injury sufficient in ordinary course of nature to cause death." },
+                summary: "Punishment for committing murder, which is culpable homicide with specific severe intent/knowledge.",
+                fullText: "Whoever commits murder shall be punished with death, or imprisonment for life, and shall also be liable to fine. (Under Sec 300, culpable homicide is murder if done with intent to cause death).",
+                exceptions: "Exceptions under Sec 300: Grave and sudden provocation, right of private defence, public servant acting in good faith, sudden fight.",
+                landmarkCase: "K.M. Nanavati v. State of Maharashtra - Leading case on 'grave and sudden provocation'.",
+                keywords: ["murder", "kill", "assassinate", "slaughter", "death", "300", "capital punishment"]
+            },
+            {
+                section: "304A", act: "Indian Penal Code, 1860", title: "Causing death by negligence", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Bailable", trialBy: "Magistrate First Class", punishment: "Imprisonment up to 2 years, or fine, or both",
+                elements: { actusReus: "Causing death of a person by doing any rash or negligent act.", mensRea: "Rashness or negligence (no specific intention or knowledge to cause death)." },
+                summary: "Causing death due to a rash or negligent act not amounting to culpable homicide.",
+                fullText: "Whoever causes the death of any person by doing any rash or negligent act not amounting to culpable homicide, shall be punished with imprisonment of either description for a term which may extend to two years, or with fine, or with both.",
+                exceptions: "Contributory negligence is generally not a defence in criminal law, but act must be the direct (causa causans) result of death.",
+                landmarkCase: "S.N. Hussain v. State of AP - Defines rashness (doing dangerous act with knowledge) vs negligence (breach of duty).",
+                keywords: ["accident", "road rage", "rash", "negligent", "driving", "hit and run", "medical negligence"]
+            },
+            {
+                section: "304B", act: "Indian Penal Code, 1860", title: "Dowry Death", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment of not less than 7 years but which may extend to life",
+                elements: { actusReus: "Death of a woman by burns or bodily injury or occurring otherwise than under normal circumstances within 7 years of marriage.", mensRea: "Cruelty or harassment by husband or relatives for, or in connection with, demand for dowry soon before death." },
+                summary: "Death of a woman within 7 years of marriage, preceded by cruelty over dowry demands.",
+                fullText: "Where the death of a woman is caused by any burns or bodily injury or occurs otherwise than under normal circumstances within seven years of her marriage and it is shown that soon before her death she was subjected to cruelty or harassment... for dowry, such death shall be called 'dowry death'.",
+                exceptions: "Statutory presumption under Sec 113B of Evidence Act applies against the accused.",
+                landmarkCase: "Shanti v. State of Haryana - Clarified the meaning of 'soon before her death' and elements of dowry death.",
+                keywords: ["dowry", "burn", "suicide", "bride", "harassment", "in-laws", "cruelty", "marriage"]
+            },
+            {
+                section: "307", act: "Indian Penal Code, 1860", title: "Attempt to murder", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment up to 10 years and fine; if hurt caused, up to life",
+                elements: { actusReus: "Doing an act directed towards causing death.", mensRea: "Intention or knowledge that if the act was completed, it would constitute murder." },
+                summary: "Attempting to commit murder with the required intention or knowledge.",
+                fullText: "Whoever does any act with such intention or knowledge, and under such circumstances that, if he by that act caused death, he would be guilty of murder, shall be punished with imprisonment of either description for a term which may extend to ten years, and shall also be liable to fine...",
+                exceptions: "Act must cross the stage of preparation and enter the stage of attempt.",
+                landmarkCase: "State of Maharashtra v. Balram Bama Patil - Hurt is not essential; the intention and act are sufficient.",
+                keywords: ["attempt", "survive", "shoot", "stab", "fail to kill", "attack"]
+            },
+            {
+                section: "326A", act: "Indian Penal Code, 1860", title: "Voluntarily causing grievous hurt by use of acid", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment not less than 10 years, up to life, and fine (to be paid to victim)",
+                elements: { actusReus: "Causing permanent or partial damage, deformity, burns, or maiming by throwing or administering acid.", mensRea: "Voluntary intent or knowledge of causing grievous hurt." },
+                summary: "Throwing or administering acid resulting in severe bodily damage or deformity.",
+                fullText: "Whoever causes permanent or partial damage or deformity to, or bums or maims or disfigures or disables, any part or parts of the body of a person or causes grievous hurt by throwing acid on or by administering acid to that person... shall be punished...",
+                exceptions: "None specific. Fine shall be just and reasonable to meet the medical expenses of the treatment of the victim.",
+                landmarkCase: "Laxmi v. Union of India - Supreme Court guidelines on regulation of acid sales and compensation for acid attack victims.",
+                keywords: ["acid", "burn", "disfigure", "throw", "chemical", "face", "attack"]
+            },
+            {
+                section: "354", act: "Indian Penal Code, 1860", title: "Assault or criminal force to woman with intent to outrage her modesty", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment from 1 to 5 years, and fine",
+                elements: { actusReus: "Assault or use of criminal force to any woman.", mensRea: "Intention to outrage or knowledge it to be likely that he will thereby outrage her modesty." },
+                summary: "Using criminal force against a woman intending to outrage her modesty.",
+                fullText: "Whoever assaults or uses criminal force to any woman, intending to outrage or knowing it to be likely that he will thereby outrage her modesty, shall be punished with imprisonment of either description for a term which shall not be less than one year but which may extend to five years...",
+                exceptions: "Consent of the woman negates the offence.",
+                landmarkCase: "Rupan Deol Bajaj v. KPS Gill - Slapping on the posteriors of a woman constitutes outraging modesty.",
+                keywords: ["modesty", "molestation", "assault", "harass", "touch", "woman", "force"]
+            },
+            {
+                section: "354D", act: "Indian Penal Code, 1860", title: "Stalking", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Bailable (First offence)", trialBy: "Any Magistrate", punishment: "Up to 3 years (1st offence), Up to 5 years (subsequent), plus fine",
+                elements: { actusReus: "Following a woman, contacting her despite disinterest, or monitoring her use of internet/electronic communication.", mensRea: "Intent to foster personal interaction despite clear indication of disinterest." },
+                summary: "Following or electronically monitoring a woman repeatedly despite her clear disinterest.",
+                fullText: "Any man who follows a woman and contacts, or attempts to contact such woman to foster personal interaction repeatedly despite a clear indication of disinterest by such woman; or monitors the use by a woman of the internet, email or any other form of electronic communication, commits the offence of stalking.",
+                exceptions: "Pursuing for state security, preventing/detecting crime, or acting under law.",
+                landmarkCase: "Santosh Kumar Singh v. State (Priyadarshini Mattoo case) - Contextualized the severe consequences of continued stalking.",
+                keywords: ["stalk", "follow", "cyber", "internet", "harass", "spy", "obsess", "monitor"]
+            },
+            {
+                section: "376", act: "Indian Penal Code, 1860", title: "Punishment for Rape (R/w Sec 375)", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Rigorous imprisonment not less than 10 years, up to life, and fine",
+                elements: { actusReus: "Sexual intercourse under specific circumstances listed in Sec 375 (against will, without consent, under coercion).", mensRea: "Intentional penetration/sexual act without valid consent." },
+                summary: "Punishment for sexual intercourse without consent, against will, or obtained via fraud/coercion.",
+                fullText: "Whoever, except in the cases provided for in sub-section (2), commits rape, shall be punished with rigorous imprisonment of either description for a term which shall not be less than ten years, but which may extend to imprisonment for life, and shall also be liable to fine.",
+                exceptions: "Medical procedures. (Note: Marital rape exception exists if wife is not under 15/18 years, heavily debated).",
+                landmarkCase: "Mukesh & Anr v. State for NCT of Delhi (Nirbhaya Case) - Resulted in Criminal Law (Amendment) Act 2013 expanding the definition of rape.",
+                keywords: ["rape", "sexual", "assault", "consent", "force", "violation"]
+            },
+            {
+                section: "377", act: "Indian Penal Code, 1860", title: "Unnatural Offences (Partially Struck Down)", chapter: "Chapter XVI", category: "Life & Body",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment for life, or up to 10 years, and fine (For non-consensual)",
+                elements: { actusReus: "Carnal intercourse against the order of nature with any man, woman or animal.", mensRea: "Voluntary action." },
+                summary: "Penalizes non-consensual unnatural sexual acts or acts with animals.",
+                fullText: "Whoever voluntarily has carnal intercourse against the order of nature with any man, woman or animal, shall be punished with imprisonment for life, or with imprisonment of either description for a term which may extend to ten years, and shall also be liable to fine.",
+                exceptions: "Consensual sexual acts between adults in private are NO LONGER an offence (Navtej Singh Johar ruling).",
+                landmarkCase: "Navtej Singh Johar v. Union of India (2018) - Struck down the application of Sec 377 to consensual homosexual acts between adults.",
+                keywords: ["unnatural", "animal", "bestiality", "sodomy", "homosexuality (historical)"]
+            },
+            
+            // Offences Against Property
+            {
+                section: "379", act: "Indian Penal Code, 1860", title: "Punishment for Theft (R/w Sec 378)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 3 years, or fine, or both",
+                elements: { actusReus: "Moving movable property out of the possession of any person without consent.", mensRea: "Dishonest intention to take the property." },
+                summary: "Moving movable property out of another's possession dishonestly without consent.",
+                fullText: "Whoever commits theft shall be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both. (Under Sec 378: Whoever, intending to take dishonestly any moveable property... moves that property).",
+                exceptions: "Taking one's own property acting under a bona fide claim of right is not theft.",
+                landmarkCase: "Pyare Lal Bhargava v. State of Rajasthan - Temporary removal of a file from a government office constitutes theft.",
+                keywords: ["steal", "rob", "possession", "dishonesty", "move", "loot", "property", "snatch"]
+            },
+            {
+                section: "384", act: "Indian Penal Code, 1860", title: "Punishment for Extortion (R/w Sec 383)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 3 years, or fine, or both",
+                elements: { actusReus: "Putting a person in fear of injury and thereby inducing them to deliver property.", mensRea: "Dishonest inducement." },
+                summary: "Intentionally putting a person in fear of injury to dishonestly induce delivery of property.",
+                fullText: "Whoever commits extortion shall be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both. (Sec 383: Intentionally puts any person in fear of any injury to that person, or to any other...).",
+                exceptions: "Threat of legal process in a bona fide manner does not constitute extortion.",
+                landmarkCase: "RS Nayak v. AR Antulay - Fear of injury must be of a nature that unsettles the mind of the victim.",
+                keywords: ["extort", "blackmail", "threat", "force", "ransom", "induce", "fear"]
+            },
+            {
+                section: "392", act: "Indian Penal Code, 1860", title: "Punishment for Robbery (R/w Sec 390)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Magistrate First Class", punishment: "Rigorous imprisonment up to 10 years (14 if on highway), and fine",
+                elements: { actusReus: "Committing theft or extortion by causing or attempting to cause death, hurt, or wrongful restraint.", mensRea: "Intent to commit theft/extortion accompanied by violence/threat." },
+                summary: "Aggravated form of theft or extortion involving imminent fear of violence or death.",
+                fullText: "Whoever commits robbery shall be punished with rigorous imprisonment for a term which may extend to ten years, and shall also be liable to fine; and, if the robbery be committed on the highway between sunset and sunrise, the imprisonment may be extended to fourteen years.",
+                exceptions: "If the fear is not of 'instant' death, hurt, or restraint, it may be extortion but not robbery.",
+                landmarkCase: "Vasant v. State of Maharashtra - Snatching mangalsutra forcefully causing injury amounts to robbery.",
+                keywords: ["rob", "mugging", "violence", "highway", "force", "snatch", "weapon"]
+            },
+            {
+                section: "395", act: "Indian Penal Code, 1860", title: "Punishment for Dacoity (R/w Sec 391)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment for life, or rigorous imprisonment up to 10 years, and fine",
+                elements: { actusReus: "Five or more persons conjointly committing or attempting to commit robbery.", mensRea: "Shared intent to commit robbery." },
+                summary: "Robbery committed conjointly by five or more persons.",
+                fullText: "Whoever commits dacoity shall be punished with imprisonment for life, or with rigorous imprisonment for a term which may extend to ten years, and shall also be liable to fine. (Sec 391: When five or more persons conjointly commit or attempt to commit robbery...).",
+                exceptions: "If the number of persons drops below five (e.g. by acquittal of others), conviction for dacoity cannot stand.",
+                landmarkCase: "Shyam Behari v. State of UP - If one of the 5 is acquitted, others cannot be convicted of dacoity unless unknown persons were involved.",
+                keywords: ["dacoit", "gang", "robbery", "conjoint", "armed", "bandit", "five"]
+            },
+            {
+                section: "403", act: "Indian Penal Code, 1860", title: "Dishonest misappropriation of property", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Non-Cognizable", bailable: "Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 2 years, or fine, or both",
+                elements: { actusReus: "Misappropriating or converting movable property to one's own use.", mensRea: "Dishonest intention." },
+                summary: "Dishonestly keeping or using someone else's movable property for yourself.",
+                fullText: "Whoever dishonestly misappropriates or converts to his own use any movable property, shall be punished with imprisonment of either description for a term which may extend to two years, or with fine, or with both.",
+                exceptions: "Finder of lost goods who takes them to protect or restore to owner is not guilty, unless he appropriates them without making reasonable attempts to find owner.",
+                landmarkCase: "U. Dhar v. State of Jharkhand - Mere retention of money without dishonest intent is civil liability, not criminal misappropriation.",
+                keywords: ["misappropriate", "convert", "lost goods", "retain", "finder", "embezzle"]
+            },
+            {
+                section: "406", act: "Indian Penal Code, 1860", title: "Punishment for criminal breach of trust (R/w Sec 405)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Magistrate First Class", punishment: "Imprisonment up to 3 years, or fine, or both",
+                elements: { actusReus: "Being entrusted with property, and dishonestly using, disposing, or retaining it in violation of law or contract.", mensRea: "Dishonest intention." },
+                summary: "Dishonestly misappropriating property entrusted to you.",
+                fullText: "Whoever commits criminal breach of trust shall be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both. (Sec 405 defines entrustment).",
+                exceptions: "Requires a fiduciary relationship or entrustment; mere breach of civil contract is not CBT.",
+                landmarkCase: "State of Gujarat v. Jaswantlal Nathalal - Requires creation of a trust/fiduciary relationship.",
+                keywords: ["breach", "trust", "entrust", "fiduciary", "agent", "embezzlement", "fraud"]
+            },
+            {
+                section: "420", act: "Indian Penal Code, 1860", title: "Cheating and dishonestly inducing delivery of property (R/w Sec 415)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Magistrate First Class", punishment: "Imprisonment up to 7 years, and fine",
+                elements: { actusReus: "Deceiving any person and inducing them to deliver property or alter a valuable security.", mensRea: "Fraudulent or dishonest intention at the time of making the promise/representation." },
+                summary: "Cheating someone to dishonestly obtain property or valuable documents.",
+                fullText: "Whoever cheats and thereby dishonestly induces the person deceived to deliver any property to any person, or to make, alter or destroy the whole or any part of a valuable security... shall be punished with imprisonment... up to seven years, and shall also be liable to fine.",
+                exceptions: "A mere breach of contract is not cheating unless dishonest intention existed at the very beginning of the transaction.",
+                landmarkCase: "Hridaya Ranjan Prasad Verma v. State of Bihar - Distinction between mere breach of contract and cheating.",
+                keywords: ["cheat", "scam", "fraud", "induce", "deceive", "fake", "con", "valuable security"]
+            },
+            {
+                section: "425", act: "Indian Penal Code, 1860", title: "Mischief", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Non-Cognizable", bailable: "Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 3 months, or fine, or both (Sec 426)",
+                elements: { actusReus: "Causing destruction or change in property which destroys or diminishes its value or utility.", mensRea: "Intent or knowledge of causing wrongful loss or damage to public or person." },
+                summary: "Intentionally causing damage to property, reducing its value or utility.",
+                fullText: "Whoever with intent to cause, or knowing that he is likely to cause, wrongful loss or damage to the public or to any person, causes the destruction of any property, or any such change in any property... as destroys or diminishes its value or utility, or affects it injuriously, commits 'mischief'.",
+                exceptions: "Property can belong to the offender himself if act affects another injuriously.",
+                landmarkCase: "Indian Oil Corp v. NEPC India - Defines scope of mischief in corporate property disputes.",
+                keywords: ["mischief", "damage", "destroy", "vandalism", "loss", "wreck"]
+            },
+            {
+                section: "447", act: "Indian Penal Code, 1860", title: "Punishment for criminal trespass (R/w Sec 441)", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 3 months, or fine up to 500 Rs, or both",
+                elements: { actusReus: "Entering into or upon property in possession of another, or remaining there unlawfully.", mensRea: "Intent to commit an offence, or to intimidate, insult or annoy the possessor." },
+                summary: "Unlawfully entering or remaining on someone's property to commit an offence or annoy them.",
+                fullText: "Whoever commits criminal trespass shall be punished with imprisonment of either description for a term which may extend to three months, or with fine which may extend to five hundred rupees, or with both.",
+                exceptions: "Bona fide claim of right to entry negates criminal trespass.",
+                landmarkCase: "Mathri v. State of Punjab - Entry must be with intent to annoy, insult, or commit offence; mere civil trespass is not enough.",
+                keywords: ["trespass", "intrude", "enter", "annoy", "land", "squatter"]
+            },
+            {
+                section: "445", act: "Indian Penal Code, 1860", title: "House-breaking", chapter: "Chapter XVII", category: "Property",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Magistrate First Class", punishment: "Imprisonment up to 2 years, and fine (Sec 453) - up to 10 years if for theft (Sec 454)",
+                elements: { actusReus: "Effecting entrance into or departure from a house in any of the six specified illicit ways (e.g., breaking lock, using force).", mensRea: "Intent to commit an offence (house-trespass)." },
+                summary: "Entering or leaving a house through forced, unauthorized, or broken pathways to commit an offence.",
+                fullText: "A person is said to commit 'house-breaking' who commits house-trespass if he effects his entrance into the house or any part of it in any of the six ways hereinafter described; or if, being in the house... he quits the house in any of such six ways...",
+                exceptions: "Opening a door conventionally is trespass, but breaking a lock/window elevates it to house-breaking.",
+                landmarkCase: "Makkhan v. Emperor - Pushing a slightly open door wide open does not constitute 'breaking' under this specific section.",
+                keywords: ["break", "enter", "burglary", "lock", "smash", "window", "trespass"]
+            },
+
+            // Offences Against Justice & State
+            {
+                section: "120B", act: "Indian Penal Code, 1860", title: "Punishment of criminal conspiracy", chapter: "Chapter VA", category: "State & Public Justice",
+                cognizable: "Depends on main offence", bailable: "Depends on main offence", trialBy: "Depends on main offence", punishment: "Same as the offence conspired to be committed (if severe); otherwise up to 6 months",
+                elements: { actusReus: "An agreement to do an illegal act, or a legal act by illegal means.", mensRea: "Intention to conspire and agree." },
+                summary: "Agreement between two or more persons to commit an illegal act.",
+                fullText: "Whoever is a party to a criminal conspiracy to commit an offence punishable with death, imprisonment for life or rigorous imprisonment for a term of two years or upwards, shall... be punished in the same manner as if he had abetted such offence.",
+                exceptions: "Mere discussion without agreement is not conspiracy. Some overt act required if conspiracy is not to commit an offence.",
+                landmarkCase: "Kehar Singh v. State (Delhi Admin) - Conspiracy is hatched in secrecy; circumstantial evidence is sufficient.",
+                keywords: ["conspiracy", "plot", "plan", "scheme", "agreement", "accomplice"]
+            },
+            {
+                section: "124A", act: "Indian Penal Code, 1860", title: "Sedition", chapter: "Chapter VI", category: "State & Public Justice",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Imprisonment for life, to which fine may be added, or up to 3 years",
+                elements: { actusReus: "Bringing or attempting to bring into hatred or contempt, or exciting disaffection towards, the Government established by law.", mensRea: "Intention to cause public disorder or incite violence." },
+                summary: "Words or acts inciting hatred or disaffection towards the government.",
+                fullText: "Whoever, by words, either spoken or written, or by signs, or by visible representation, or otherwise, brings or attempts to bring into hatred or contempt, or excites or attempts to excite disaffection towards, the Government established by law in India, shall be punished...",
+                exceptions: "Comments expressing disapprobation of govt measures without inciting violence do not constitute sedition.",
+                landmarkCase: "Kedar Nath Singh v. State of Bihar - Upheld validity but restricted application only to acts involving intention/tendency to create disorder or incite violence.",
+                keywords: ["sedition", "treason", "revolt", "disaffection", "government", "incite", "speech"]
+            },
+            {
+                section: "143", act: "Indian Penal Code, 1860", title: "Punishment for Unlawful Assembly (R/w Sec 141)", chapter: "Chapter VIII", category: "State & Public Justice",
+                cognizable: "Cognizable", bailable: "Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 6 months, or fine, or both",
+                elements: { actusReus: "Being a member of an assembly of five or more persons with a common illegal object (e.g., criminal force).", mensRea: "Awareness of facts rendering the assembly unlawful and intentional participation." },
+                summary: "Being part of a group of 5+ people gathered for an illegal purpose.",
+                fullText: "Whoever is a member of an unlawful assembly, shall be punished with imprisonment of either description for a term which may extend to six months, or with fine, or with both.",
+                exceptions: "Assembly originally lawful may become unlawful later; mere presence without sharing the common object is not punishable.",
+                landmarkCase: "Moti Das v. State of Bihar - An assembly which was lawful when it assembled may subsequently become an unlawful assembly.",
+                keywords: ["mob", "riot", "assembly", "gather", "protest", "unlawful", "five"]
+            },
+            {
+                section: "166A", act: "Indian Penal Code, 1860", title: "Public servant disobeying direction under law", chapter: "Chapter IX", category: "State & Public Justice",
+                cognizable: "Cognizable", bailable: "Bailable", trialBy: "Magistrate First Class", punishment: "Rigorous imprisonment from 6 months to 2 years, and fine",
+                elements: { actusReus: "Public servant disobeying law regarding investigation, or failing to record information (FIR) for specific offences (like rape).", mensRea: "Knowingly disobeying the direction of the law." },
+                summary: "Public servant failing to perform duty, especially refusing to register FIRs for sexual offences.",
+                fullText: "Whoever, being a public servant, knowingly disobeys any direction of the law which prohibits him from requiring the attendance at any place of any person for the purpose of investigation... or fails to record any information given to him under sub-section (1) of section 154 of the CrPC, in relation to cognizable offences punishable under section 326A, 326B, 354, 354B, 370, 370A, 376... shall be punished...",
+                exceptions: "Action taken in good faith may be protected under general exceptions.",
+                landmarkCase: "Lalita Kumari v. Govt of UP - Mandatory registration of FIR if information discloses cognizable offence.",
+                keywords: ["police", "refuse", "fir", "public servant", "duty", "disobey", "ignore"]
+            },
+            {
+                section: "193", act: "Indian Penal Code, 1860", title: "Punishment for false evidence (Perjury) (R/w Sec 191)", chapter: "Chapter XI", category: "State & Public Justice",
+                cognizable: "Non-Cognizable", bailable: "Bailable", trialBy: "Magistrate First Class", punishment: "Imprisonment up to 7 years (judicial proceeding) or 3 years (other cases), and fine",
+                elements: { actusReus: "Giving or fabricating false evidence.", mensRea: "Intention that it may appear in evidence in a judicial proceeding and cause an erroneous opinion." },
+                summary: "Giving fake testimony or fabricating evidence for a court case.",
+                fullText: "Whoever intentionally gives false evidence in any stage of a judicial proceeding, or fabricates false evidence for the purpose of being used in any stage of a judicial proceeding, shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine...",
+                exceptions: "False statement must be on a point material to the result of the proceeding.",
+                landmarkCase: "Iqbal Singh Marwah v. Meenakshi Marwah - Relates to procedures under Sec 195 CrPC for prosecuting perjury.",
+                keywords: ["perjury", "lie", "court", "false", "evidence", "fabricate", "testimony"]
+            },
+            {
+                section: "201", act: "Indian Penal Code, 1860", title: "Causing disappearance of evidence of offence", chapter: "Chapter XI", category: "State & Public Justice",
+                cognizable: "Depends on main offence", bailable: "Depends on main offence", trialBy: "Depends on main offence", punishment: "Depends on main offence (e.g., up to 7 years if capital offence)",
+                elements: { actusReus: "Causing evidence of the commission of an offence to disappear, or giving false information.", mensRea: "Intention of screening the offender from legal punishment." },
+                summary: "Destroying evidence or lying to protect a criminal.",
+                fullText: "Whoever, knowing or having reason to believe that an offence has been committed, causes any evidence of the commission of that offence to disappear, with the intention of screening the offender from legal punishment, or with that intention gives any information respecting the offence which he knows or believes to be false, shall be punished...",
+                exceptions: "Accused cannot be convicted for this if there is no proof that main offence was committed.",
+                landmarkCase: "Palvinder Kaur v. State of Punjab - Cannot be convicted under 201 if main offence is not established.",
+                keywords: ["destroy", "hide", "evidence", "screen", "protect", "burn", "bury", "cover up"]
+            },
+            {
+                section: "303", act: "Indian Penal Code, 1860", title: "Punishment for murder by life-convict (Struck Down)", chapter: "Chapter XVI", category: "State & Public Justice",
+                cognizable: "Cognizable", bailable: "Non-Bailable", trialBy: "Court of Session", punishment: "Death (Mandatory - Unconstitutional)",
+                elements: { actusReus: "Committing murder while already undergoing sentence of imprisonment for life.", mensRea: "Same as murder." },
+                summary: "Mandatory death penalty for a life convict who commits murder (Declared unconstitutional).",
+                fullText: "Whoever, being under sentence of imprisonment for life, commits murder, shall be punished with death.",
+                exceptions: "Provision was struck down entirely as it violates Article 14 and 21 of the Constitution.",
+                landmarkCase: "Mithu v. State of Punjab (1983) - SC struck down Section 303 as unconstitutional, arbitrary, and violative of Right to Life.",
+                keywords: ["mandatory", "death", "convict", "prison", "unconstitutional", "mithu"]
+            },
+            {
+                section: "497", act: "Indian Penal Code, 1860", title: "Adultery (Struck Down)", chapter: "Chapter XX", category: "State & Public Justice",
+                cognizable: "Non-Cognizable", bailable: "Bailable", trialBy: "Any Magistrate", punishment: "Imprisonment up to 5 years, or fine, or both (Historically)",
+                elements: { actusReus: "Sexual intercourse with a person who is and whom he knows or has reason to believe to be the wife of another man, without consent/connivance of husband.", mensRea: "Intentional intercourse." },
+                summary: "Criminalizing sexual intercourse with another man's wife (Declared unconstitutional).",
+                fullText: "Whoever has sexual intercourse with a person who is and whom he knows or has reason to believe to be the wife of another man, without the consent or connivance of that man, such sexual intercourse not amounting to the offence of rape, is guilty of the offence of adultery...",
+                exceptions: "Struck down as a criminal offence. Remains a civil ground for divorce.",
+                landmarkCase: "Joseph Shine v. Union of India (2018) - SC struck down Section 497 as unconstitutional, stating it treats women as chattel.",
+                keywords: ["adultery", "affair", "wife", "marriage", "cheat", "joseph shine"]
+            },
+            {
+                section: "465", act: "Indian Penal Code, 1860", title: "Punishment for forgery (R/w Sec 463)", chapter: "Chapter XVIII", category: "Documents & Forgery",
+                cognizable: "Non-Cognizable", bailable: "Bailable", trialBy: "Magistrate First Class", punishment: "Imprisonment up to 2 years, or fine, or both",
+                elements: { actusReus: "Making a false document or false electronic record.", mensRea: "Intent to cause damage/injury, support a claim, cause parted property, or commit fraud." },
+                summary: "Creating fake documents or signatures to commit fraud.",
+                fullText: "Whoever commits forgery shall be punished with imprisonment of either description for a term which may extend to two years, or with fine, or with both. (Sec 463 defines forgery as making false document with intent to cause damage/fraud).",
+                exceptions: "Creating a copy for legitimate purposes without fraudulent intent is not forgery.",
+                landmarkCase: "Sheila Sebastian v. R. Jawaharaj - A person can only be convicted if they themselves made the false document; mere use of it falls under other sections (e.g., 471).",
+                keywords: ["forge", "fake", "signature", "document", "fraud", "counterfeit", "sign"]
+            }
+        ];
+
+        /**
+         * PART 2: NLP & MATCH ENGINE
+         */
+        const STOP_WORDS = new Set(["a", "an", "the", "and", "or", "but", "is", "are", "was", "were", "of", "in", "to", "for", "with", "on", "at", "by", "from", "up", "about", "into", "over", "after"]);
+
+        // State Management
+        let appState = {
+            query: "",
+            categoryFilter: "All",
+            pinnedSections: new Set(),
+            selectedSectionId: null,
+            results: LEGAL_DATABASE // Initial load shows all
+        };
+
+        // Tokenizer & normalizer
+        function tokenize(text) {
+            if (!text) return [];
+            return text.toLowerCase()
+                .replace(/[^\w\s]/gi, '') // Remove punctuation
+                .split(/\s+/)
+                .filter(word => word.length > 2 && !STOP_WORDS.has(word));
+        }
+
+        // Fuzzy Match Scoring Algorithm
+        function calculateRelevance(entry, tokens, rawQuery) {
+            let score = 0;
+            const qLower = rawQuery.toLowerCase();
+            
+            // 1. Direct Section Number Match (Highest Weight)
+            const numericMatch = rawQuery.match(/\d+[a-z]*/i);
+            if (numericMatch && entry.section.toLowerCase() === numericMatch[0].toLowerCase()) {
+                score += 100;
+            }
+
+            // 2. Exact Title Match
+            if (entry.title.toLowerCase().includes(qLower) && qLower.length > 3) {
+                score += 30;
+            }
+
+            // 3. Token Overlap
+            tokens.forEach(token => {
+                // Check Keywords (High Weight)
+                if (entry.keywords.some(kw => kw.includes(token))) score += 10;
+                
+                // Check Title (Medium Weight)
+                if (entry.title.toLowerCase().includes(token)) score += 5;
+                
+                // Check Summary/Actus Reus (Lower Weight)
+                if (entry.summary.toLowerCase().includes(token)) score += 2;
+                if (entry.elements.actusReus.toLowerCase().includes(token)) score += 2;
+            });
+
+            return score;
+        }
+
+        // Search Executor
+        function executeSearch() {
+            const start = performance.now();
+            const tokens = tokenize(appState.query);
+            
+            let filtered = LEGAL_DATABASE;
+
+            // Apply Category Filter
+            if (appState.categoryFilter !== "All") {
+                filtered = filtered.filter(item => item.category === appState.categoryFilter);
+            }
+
+            // Apply NLP Search
+            if (appState.query.trim() !== "") {
+                filtered = filtered.map(item => {
+                    return {
+                        ...item,
+                        _score: calculateRelevance(item, tokens, appState.query)
+                    };
+                }).filter(item => item._score > 0)
+                  .sort((a, b) => b._score - a._score);
+            } else {
+                // If no query, reset scores
+                filtered = filtered.map(item => ({...item, _score: 0}));
+            }
+
+            appState.results = filtered;
+            
+            const end = performance.now();
+            const latency = (end - start).toFixed(2);
+            document.getElementById('latency-metric').innerText = `< ${latency}ms`;
+            
+            // Calculate Confidence based on top score
+            if (appState.results.length > 0 && appState.query.trim() !== "") {
+                const topScore = appState.results[0]._score;
+                let conf = Math.min(99, Math.floor((topScore / 50) * 100)); // Normalization arbitrary baseline
+                if (conf < 20) conf = 25; // Floor
+                document.getElementById('confidence-metric').innerText = `${conf}% Match`;
+                document.getElementById('confidence-metric').className = `text-2xl font-bold mt-1 ${conf > 75 ? 'text-brand-emerald' : conf > 40 ? 'text-brand-amber' : 'text-slate-400'}`;
+            } else {
+                document.getElementById('confidence-metric').innerText = `N/A`;
+                document.getElementById('confidence-metric').className = "text-2xl font-bold text-white mt-1";
+            }
+
+            renderResults();
+        }
+
+        /**
+         * PART 3: UI RENDERERS & EVENT LISTENERS
+         */
+
+        function renderResults() {
+            const container = document.getElementById('results-container');
+            document.getElementById('result-count').innerText = `${appState.results.length} Found`;
+            
+            if (appState.results.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-6 text-slate-500">
+                        <svg class="w-10 h-10 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <p>No penal provisions match this scenario.</p>
+                        <p class="text-xs mt-1">Try rewording or checking spelling.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = appState.results.map(item => {
+                const isSelected = appState.selectedSectionId === item.section;
+                const isPinned = appState.pinnedSections.has(item.section);
+                
+                // Construct score visualizer
+                let scoreHtml = '';
+                if (item._score && item._score > 0) {
+                    const width = Math.min(100, (item._score / 50) * 100);
+                    scoreHtml = `
+                        <div class="w-full bg-slate-700 h-1 mt-2 rounded overflow-hidden">
+                            <div class="bg-brand-emerald h-1" style="width: ${width}%"></div>
+                        </div>
+                    `;
+                }
+
+                return `
+                <div onclick="selectSection('${item.section}')" 
+                     class="glass-card cursor-pointer p-4 rounded-xl border ${isSelected ? 'border-brand-blue bg-slate-800' : 'border-slate-700/50 hover:bg-slate-800/80'} relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-sm font-bold text-indigo-400">Sec ${item.section}</span>
+                        ${isPinned ? '<svg class="w-4 h-4 text-brand-emerald" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}
+                    </div>
+                    <h3 class="text-white font-medium text-base mb-1 truncate">${item.title}</h3>
+                    <p class="text-slate-400 text-xs line-clamp-2">${item.summary}</p>
+                    ${scoreHtml}
+                </div>
+                `;
+            }).join('');
+        }
+
+        function selectSection(sectionId) {
+            appState.selectedSectionId = sectionId;
+            renderResults(); // Update active state in list
+            
+            const sectionData = LEGAL_DATABASE.find(s => s.section === sectionId);
+            if (!sectionData) return;
+
+            document.getElementById('detail-empty-state').classList.add('hidden');
+            document.getElementById('detail-content').classList.remove('hidden');
+            
+            document.getElementById('detail-act').innerText = sectionData.act;
+            document.getElementById('detail-chapter').innerText = sectionData.chapter;
+            document.getElementById('detail-title').innerText = `Section ${sectionData.section}: ${sectionData.title}`;
+            
+            // Build Tags
+            const isStruckDown = sectionData.title.includes("Struck Down") || sectionData.title.includes("Invalid");
+            document.getElementById('detail-tags').innerHTML = `
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sectionData.category === 'Life & Body' ? 'bg-rose-900/40 text-rose-400 border border-rose-500/30' : sectionData.category === 'Property' ? 'bg-amber-900/40 text-amber-400 border border-amber-500/30' : 'bg-indigo-900/40 text-indigo-400 border border-indigo-500/30'}">
+                    ${sectionData.category}
+                </span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sectionData.cognizable === 'Cognizable' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'} border border-slate-600">
+                    ${sectionData.cognizable}
+                </span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sectionData.bailable === 'Non-Bailable' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'} border border-slate-600">
+                    ${sectionData.bailable}
+                </span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600">
+                    Trial by: ${sectionData.trialBy}
+                </span>
+                ${isStruckDown ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-600 text-white animate-pulse">Unconstitutional / Struck Down</span>' : ''}
+            `;
+
+            document.getElementById('detail-fulltext').innerText = sectionData.fullText;
+            document.getElementById('detail-punishment').innerText = sectionData.punishment;
+            document.getElementById('detail-actus').innerText = sectionData.elements.actusReus;
+            document.getElementById('detail-mens').innerText = sectionData.elements.mensRea;
+            document.getElementById('detail-exceptions').innerText = sectionData.exceptions;
+            document.getElementById('detail-landmark').innerText = sectionData.landmarkCase;
+        }
+
+        function pinCurrentSection() {
+            if (!appState.selectedSectionId) return;
+            
+            if (appState.pinnedSections.has(appState.selectedSectionId)) {
+                appState.pinnedSections.delete(appState.selectedSectionId);
+            } else {
+                appState.pinnedSections.add(appState.selectedSectionId);
+            }
+            
+            updateDrawerUI();
+            renderResults(); // update pin icon on list
+        }
+
+        function removePinned(sectionId) {
+            appState.pinnedSections.delete(sectionId);
+            updateDrawerUI();
+            renderResults();
+        }
+
+        function updateDrawerUI() {
+            const badge = document.getElementById('pin-badge');
+            const count = appState.pinnedSections.size;
+            const exportBtn = document.getElementById('btn-export-brief');
+            
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+                exportBtn.removeAttribute('disabled');
+            } else {
+                badge.classList.add('hidden');
+                exportBtn.setAttribute('disabled', 'true');
+            }
+
+            const drawerContent = document.getElementById('drawer-content');
+            if (count === 0) {
+                drawerContent.innerHTML = `
+                    <div class="text-center text-slate-500 mt-10">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                        <p>No provisions pinned yet.</p>
+                        <p class="text-xs mt-1">Pin sections to build your exportable brief.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            appState.pinnedSections.forEach(secId => {
+                const item = LEGAL_DATABASE.find(s => s.section === secId);
+                html += `
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg p-3 relative group">
+                        <button onclick="removePinned('${secId}')" class="absolute top-2 right-2 text-slate-500 hover:text-rose-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                        <h4 class="text-sm font-bold text-indigo-400">Section ${item.section}</h4>
+                        <p class="text-white text-sm font-medium mb-1">${item.title}</p>
+                        <p class="text-xs text-slate-400">${item.punishment}</p>
+                    </div>
+                `;
+            });
+            drawerContent.innerHTML = html;
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('brief-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            
+            if (drawer.classList.contains('translate-x-full')) {
+                drawer.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                drawer.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Generate Print Output
+        function generatePrintBrief() {
+            const printContainer = document.getElementById('print-container');
+            let dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            
+            let html = `
+                <div style="font-family: Arial, sans-serif; max-w: 800px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                        <h1 style="margin: 0; font-size: 24px;">Legal Analysis Brief</h1>
+                        <p style="margin: 5px 0 0 0; color: #555;">Generated by eCourts AI Engine System</p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #777;">Date: ${dateStr}</p>
+                    </div>
+                    <h2>Selected Penal Provisions</h2>
+            `;
+
+            appState.pinnedSections.forEach(secId => {
+                const item = LEGAL_DATABASE.find(s => s.section === secId);
+                html += `
+                    <div class="print-section">
+                        <h3 style="margin-bottom: 5px; color: #2c3e50;">Section ${item.section} - ${item.title}</h3>
+                        <p style="margin: 0 0 10px 0; font-size: 12px; color: #555;">${item.act} | ${item.chapter}</p>
+                        <p><strong>Status:</strong> <span class="print-badge">${item.cognizable}</span> <span class="print-badge">${item.bailable}</span></p>
+                        <p><strong>Punishment:</strong> ${item.punishment}</p>
+                        <h4>Legal Elements:</h4>
+                        <ul style="margin-top: 5px;">
+                            <li><strong>Actus Reus:</strong> ${item.elements.actusReus}</li>
+                            <li><strong>Mens Rea:</strong> ${item.elements.mensRea}</li>
+                        </ul>
+                        <p><strong>Landmark Precedent:</strong> ${item.landmarkCase}</p>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div style="margin-top: 30px; font-size: 10px; text-align: center; color: #888;">
+                    Disclaimer: This is an AI-generated analysis based on embedded statutory texts for academic defense purposes. Not for formal legal advice.
+                </div>
+                </div>
+            `;
+
+            printContainer.innerHTML = html;
+            
+            // Close drawer before print dialog
+            toggleDrawer();
+            
+            // Trigger browser print
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+
+        // Input & Setup Listeners
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            appState.query = e.target.value;
+            executeSearch();
+        });
+
+        // Scenario Chips
+        function setScenario(text) {
+            const input = document.getElementById('search-input');
+            input.value = text;
+            appState.query = text;
+            executeSearch();
+        }
+
+        // Category Filter Buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update visual active state
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-brand-blue', 'text-white', 'shadow-lg', 'shadow-blue-500/30', 'active');
+                    b.classList.add('bg-slate-800', 'text-slate-300');
+                });
+                e.target.classList.remove('bg-slate-800', 'text-slate-300');
+                e.target.classList.add('bg-brand-blue', 'text-white', 'shadow-lg', 'shadow-blue-500/30', 'active');
+                
+                appState.categoryFilter = e.target.getAttribute('data-category');
+                executeSearch();
+            });
+        });
+
+        // Clock Update
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock-display').innerText = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
+        }, 1000);
+
+        // Initialization
+        window.onload = () => {
+            executeSearch(); // Initial render
+        };
+
+    </script>
+</body>
+</html>
